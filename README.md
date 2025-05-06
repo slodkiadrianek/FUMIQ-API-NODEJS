@@ -41,8 +41,8 @@ FUMIQ is a backend system designed to manage quizzes and sessions for educationa
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/fumiq-backend.git
-   cd fumiq-backend
+   git clone https://github.com/your-repo/FUMIQ-BACKEND.git
+   cd FUMIQ-BACKEND
    ```
 2. Install dependencies:
    ```bash
