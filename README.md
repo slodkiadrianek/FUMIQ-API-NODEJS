@@ -7,7 +7,7 @@ FUMIQ is a backend system designed to manage quizzes and sessions for educationa
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
-- [Optional routes](#optional-routes)
+- [Special routes](#special-routes)
 - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [License](#license)
@@ -92,7 +92,7 @@ docker run -p 3000:3000 --env-file .env fumiq-backend
 - `ORIGIN_LINK` Link for frontend
 - `SERVER_IP` Adress ip of the backend server
 
-## Optional routes
+## Special routes
 
 1. Documentation:
    ```bash
@@ -107,7 +107,7 @@ docker run -p 3000:3000 --env-file .env fumiq-backend
    http://localhost:3000/health/service
    ```
 
-## Pro structure
+## Project structure
 
 ```bash
 fumiq-backend/
