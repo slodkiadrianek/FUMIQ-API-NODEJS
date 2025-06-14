@@ -101,7 +101,7 @@ export class UserService extends BaseService {
       );
     }
 
-    let existingCompetitor = quizSession.competitors.find(
+    const existingCompetitor = quizSession.competitors.find(
       (el) => el.userId.toString() === userId
     );
 
@@ -221,14 +221,14 @@ export class UserService extends BaseService {
       for (const userAnswer of userAnswers) {
         if (el.question.toString() === userAnswer.questionId.toString()) {
           if (typeof el.answer === "string") {
-            if (el.answer.toLowerCase() === userAnswer.answer) {
+            if (el.answer.toLowerCase() === userAnswer.answer.toLowerCase()) {
               score++;
             }
           } else {
             if (!el.answer) {
               score++;
             } else {
-              if (el.answer.join(",").toLowerCase() === userAnswer.answer) {
+              if (el.answer.join(",").toLowerCase() === userAnswer.answer.toLowerCase()) {
                 score++;
               }
             }
@@ -241,7 +241,7 @@ export class UserService extends BaseService {
       `Quiz-Result-${sessionId}-${userId}`,
       JSON.stringify(score),
       {
-        EX:30
+        EX: 30
       }
     );
     return score;

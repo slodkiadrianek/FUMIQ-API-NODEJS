@@ -184,14 +184,14 @@ export class QuizService extends BaseService {
               answer: userAnswer.answer,
             });
             if (typeof el.answer === "string") {
-              if (el.answer.toLowerCase() === userAnswer.answer) {
+              if (el.answer.toLowerCase() === userAnswer.answer.toLowerCase()) {
                 score++;
               }
             } else {
               if (!el.answer) {
                 score++;
               } else {
-                if (el.answer.join(",").toLowerCase() === userAnswer.answer) {
+                if (el.answer.join(",").toLowerCase() === userAnswer.answer.toLowerCase()) {
                   score++;
                 }
               }
