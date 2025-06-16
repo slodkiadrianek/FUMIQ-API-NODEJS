@@ -21,13 +21,23 @@ export class AuthService extends BaseService {
   registerUser = async (userData: Omit<IUser, "_id">): Promise<IUser> => {
     const userExist: IUser | null = await User.findOne({
       email: userData.email,
-      isActive: true
     });
-    if (userExist) {
-      this.logger.error("User with this email already exists");
-      throw new AppError(409, "User", "User with this email already exists");
-    }
     userData.password = await bcrypt.hash(userData.password, 11);
+    if (userExist) {
+      if (!userExist.isActivated) {
+        const result: IUser = await this.updateItem<IUser>("User", userExist._id.toString(), userData, User)
+        const token: string = this.auth.sign(result);
+        await this.emailService.sendEmail(
+          userData.email,
+          "Aktywacja konta",
+          `${process.env.ORIGIN_LINK}/activateUser.html?token=${token}`
+        );
+        return result
+      } else {
+        this.logger.error("User with this email already exists");
+        throw new Error('User with this email already exist');
+      }
+    }
     const result: IUser = await this.insertToDatabaseAndCache(
       "User",
       userData,
@@ -102,7 +112,6 @@ export class AuthService extends BaseService {
   };
   activateUser = async (token: string): Promise<IUser> => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "");
-    decoded;
     const user: IUser | null = await User.findOne({
       email: (decoded as { user: { email: string } }).user.email,
     });

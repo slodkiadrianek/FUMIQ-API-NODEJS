@@ -44,16 +44,7 @@ export const loginUser: ObjectSchema = Joi.object({
     'any.custom': 'Please use your school email address ending with @zs2.ostrzeszow.pl'
   }),
   password: Joi.string()
-    .min(8)
-    .max(30)
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    )
-    .required()
-    .messages({
-      "string.pattern.base":
-        "Password must contain at least 1 lowercase letter, 1 uppercase letter, 1 digit, and 1 special character. It must be at least 8 characters long.",
-    }),
+    .required(),
 });
 
 export const emailUser: ObjectSchema = Joi.object({
