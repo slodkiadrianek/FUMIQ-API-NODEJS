@@ -1,6 +1,6 @@
 {
   "name": "fumiq",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "system do przeprowadzania sprawdzianów w szkole",
   "main": "server.js",
   "type": "module",
