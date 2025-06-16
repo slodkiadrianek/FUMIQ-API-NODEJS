@@ -21,6 +21,7 @@ export class AuthService extends BaseService {
   registerUser = async (userData: Omit<IUser, "_id">): Promise<IUser> => {
     const userExist: IUser | null = await User.findOne({
       email: userData.email,
+      isActive: true
     });
     if (userExist) {
       this.logger.error("User with this email already exists");
