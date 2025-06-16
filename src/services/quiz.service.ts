@@ -360,10 +360,7 @@ export class QuizService extends BaseService {
       quizDescription: string;
       averageScore: number
       highestScore: number
-      question: {
-        questionText: string;
-        questionScore: number;
-      }[];
+      questions: { questionText: string, options: { optionText: string, percentage: number, isCorrect: boolean }[] }[]
     }> => {
     const resQuiz = await Quiz.findOne({ _id: quizId, userId: userId })
     if (!resQuiz) {
@@ -378,40 +375,101 @@ export class QuizService extends BaseService {
       this.logger.error("Session with this id does not exist", { quizId })
       throw new AppError(400, "Database", "Session with this id does not exist")
     }
-    const questions: { questionText: string, questionScore: number }[] = []
-    const usersScore: number[] = []
+    const questions: { questionText: string, options: { optionText: string, percentage: number, isCorrect: boolean }[] }[] = []
+    const usersScore: Array<number> = []
     for (const el of resQuiz.questions) {
-      let score: number = 0;
+      const options: { optionText: string, percentage: number, isCorrect: boolean }[] = []
+      for (const option of el.options) {
+        options.push({ optionText: option.toLowerCase(), percentage: 0, isCorrect: false })
+      }
+      if (Array.isArray(el.correctAnswer)) {
+        for (const correctAnswer of el.correctAnswer) {
+          for (const option of options) {
+            if (option.optionText === correctAnswer.toLowerCase()) {
+              option.isCorrect = true
+            }
+          }
+        }
+      } else {
+        for (const option of options) {
+          if (option.optionText === el.correctAnswer?.toLowerCase()) {
+            option.isCorrect = true
+          }
+        }
+      }
       for (const competitor of resSession.competitors) {
         for (const competitorAnswer of competitor.answers) {
-          let competitorScore: number = 0
           if (el._id.toString() === competitorAnswer.questionId.toString()) {
             if (typeof el.correctAnswer === "string") {
               if (el.correctAnswer.toLowerCase() === competitorAnswer.answer.toLowerCase()) {
-                competitorScore++
-                score++;
+                for (const option of options) {
+                  if (option.optionText === competitorAnswer.answer.toLowerCase()) {
+                    option.percentage++
+                  }
+                }
+              } else {
+                for (const option of options) {
+                  if (option.optionText === competitorAnswer.answer.toLowerCase()) {
+                    option.percentage++
+                  }
+                }
               }
             } else {
-              if (!el.correctAnswer) {
-                competitorScore++
-                score++;
-              } else {
+              if (el.correctAnswer) {
                 if (el.correctAnswer.join(",").toLowerCase() === competitorAnswer.answer.toLowerCase()) {
-                  competitorScore++
-                  score++;
+                  for (const correctAnswer of el.correctAnswer) {
+                    for (const option of options) {
+                      if (option.optionText === correctAnswer.toLowerCase()) {
+                        option.percentage++
+                      }
+                    }
+                  }
+                } else {
+                  for (const option of options) {
+                    if (option.optionText === competitorAnswer.answer.toLowerCase()) {
+                      option.percentage++
+                    }
+                  }
                 }
               }
             }
           }
-          usersScore.push(competitorScore)
         }
       }
-      questions.push({ questionText: el.questionText, questionScore: Math.floor((score / resSession.competitors.length) * 100) })
+      for (const option of options) {
+        option.percentage = Math.floor((option.percentage / resSession.competitors.length) * 100)
+      }
+      questions.push({ questionText: el.questionText, options: options })
     }
-    const averageScore = Math.floor((usersScore.reduce((acc, curr) => {
-      return acc + curr
-    }, 0) / resSession.competitors.length) * 100)
-    const highestScore = Math.max(...usersScore)
-    return { quizTitle: resQuiz.title, quizDescription: resQuiz.description, averageScore: averageScore, highestScore: highestScore, question: questions }
+    for (const competiror of resSession.competitors) {
+
+      let competitorScore: number = 0
+      for (const question of resQuiz.questions) {
+        for (const competirorAnswer of competiror.answers) {
+          if (question._id.toString() === competirorAnswer.questionId.toString()) {
+            if (typeof question.correctAnswer === "string") {
+              if (question.correctAnswer.toLowerCase() === competirorAnswer.answer.toLowerCase()) {
+                competitorScore++;
+              }
+            } else {
+              if (!question.correctAnswer) {
+                competitorScore++;
+              } else {
+                if (question.correctAnswer.join(",").toLowerCase() === competirorAnswer.answer.toLowerCase()) {
+                  competitorScore++;
+                }
+              }
+            }
+          }
+        }
+      }
+      usersScore.push(competitorScore)
+    }
+    console.log(usersScore)
+    const averageScore = Math.floor(
+      (usersScore.reduce((acc, curr) => acc + (curr / resQuiz.questions.length), 0) / resSession.competitors.length) * 100
+    );
+    const highestScore = Math.floor((Math.max(...usersScore) / resQuiz.questions.length) * 100)
+    return { quizTitle: resQuiz.title, quizDescription: resQuiz.description, averageScore: averageScore, highestScore: highestScore, questions: questions }
   }
 }
