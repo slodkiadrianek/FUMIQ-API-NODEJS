@@ -35,12 +35,7 @@ export class AuthController {
       this.logger.info(`User succesfully created`, {
         userId: result._id,
       });
-      res.status(201).json({
-        success: true,
-        data: {
-          user: result,
-        },
-      });
+      res.status(201).json({});
       return;
     } catch (err) {
       next(err);
