@@ -102,10 +102,6 @@ docker run -p 3000:3000 --env-file .env fumiq-backend
    ```bash
    http://localhost:3000/health
    ```
-3. Service Check
-   ```bash
-   http://localhost:3000/health/service
-   ```
 
 ## Pro structure
 
