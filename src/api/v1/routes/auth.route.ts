@@ -64,7 +64,7 @@ export class AuthRoutes {
      *                 type: string
      *                 example: Password123!
      *     responses:
-     *       200:
+     *       201:
      *         description: User
      *         content:
      *           application/json:
@@ -161,6 +161,13 @@ export class AuthRoutes {
      *   get:
      *     summary: Verify user login
      *     tags: [Auth]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
      *         description: User
@@ -199,6 +206,13 @@ export class AuthRoutes {
      *   post:
      *     summary: Logout a user
      *     tags: [Auth]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       204:
      *         description: No Content
