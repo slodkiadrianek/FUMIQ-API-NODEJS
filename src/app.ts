@@ -1,4 +1,5 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
 import helmet from "helmet";
 import cors from "cors";
 import { createClient } from "redis";
@@ -17,6 +18,7 @@ import { UserService } from "./services/user.service.js";
 import { UserController } from "./api/v1/controllers/user.controller.js";
 import { UserRoutes } from "./api/v1/routes/user.route.js";
 import { swaggerUi, swaggerSpec } from "./swagger.js";
+import { AppError } from "./models/error.model.js";
 
 export const app = express();
 app.use(helmet());
@@ -94,6 +96,29 @@ const userRoutes: UserRoutes = new UserRoutes(userController, auth);
 
 //USE
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/health", async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const dbConnected = mongoose.connection.readyState === 1;
+    if (!dbConnected) {
+      throw new AppError(503, "Database", "Database is not connected to an app")
+    }
+    const memoryUsage = process.memoryUsage()
+    const memoryMB = {
+      rss: (memoryUsage.rss / 1024 / 1024).toFixed(2),
+      heapUsed: (memoryUsage.heapUsed / 1024 / 1024).toFixed(2),
+      heapTotal: (memoryUsage.heapTotal / 1024 / 1024).toFixed(2),
+    };
+    res.status(200).json({
+      succes: true,
+      data: {
+        dbConnected: true,
+        memoryMB,
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+})
 
 app.use(authRoutes.router);
 app.use(quizRoutes.router);

@@ -638,12 +638,6 @@ export class QuizRoutes {
      *           type: string
      *         required: true
      *         description: ID of the session
-     *       - in: path
-     *         name: sessionId
-     *         schema:
-     *           type: string
-     *         required: true
-     *         description: ID of the session to end
      *       - in: header
      *         name: Authorization
      *         required: true
@@ -795,12 +789,6 @@ export class QuizRoutes {
      *           type: string
      *         required: true
      *         description: ID of the session
-     *       - in: path
-     *         name: sessionId
-     *         schema:
-     *           type: string
-     *         required: true
-     *         description: ID of the session to end
      *       - in: header
      *         name: Authorization
      *         required: true
@@ -889,7 +877,7 @@ export class QuizRoutes {
      * /api/v1/quizzes/{quizId}/sessions/{sessionId}/analytics:
      *   get:
      *     summary: Analyze quiz session questions
-     *     tags: [Analytics]
+     *     tags: [Session]
      *     parameters:
      *       - in: path
      *         name: quizId
@@ -903,12 +891,6 @@ export class QuizRoutes {
      *           type: string
      *         required: true
      *         description: ID of the session
-     *       - in: path
-     *         name: sessionId
-     *         schema:
-     *           type: string
-     *         required: true
-     *         description: ID of the session to end
      *       - in: header
      *         name: Authorization
      *         required: true
@@ -929,6 +911,41 @@ export class QuizRoutes {
      *                 data:
      *                   type: object
      *                   description: Analytics data for the quiz session
+     *                   properties:
+     *                     quizTitle:
+     *                       type: string
+     *                       example: TEST
+     *                     quizDescription:
+     *                       type: string
+     *                       example: Test Naukowy
+     *                     averageScore:
+     *                       type: number
+     *                       example: 87
+     *                     highestScore:
+     *                       type: number
+     *                       example: 100
+     *                     question:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                         properties:
+     *                           questionText:
+     *                             type: string
+     *                             example: 2+2
+     *                           options:
+     *                             type: array
+     *                             items:
+     *                               type: object
+     *                               properties:
+     *                                 optionText:
+     *                                   type: string
+     *                                   example: Paris
+     *                                 percentage:
+     *                                   type: number
+     *                                   example: 90
+     *                                 isCorrect:
+     *                                   type: boolean
+     *                                   example: false
      *       401:
      *         description: Unauthorized - Invalid or missing JWT token
      *       404:

@@ -211,28 +211,26 @@ export class UserRoutes {
      *                         isActive:
      *                           type: boolean
      *                           example: true
-     *                         competitors:
-     *                           type: array
-     *                           items:
-     *                             type: object
-     *                             properties:
-     *                               userId:
-     *                                 type: string
-     *                                 example: "1234567890abcdef12345678"
-     *                               finished:
-     *                                 type: boolean
-     *                                 example: false
-     *                               answers:
-     *                                 type: array
-     *                                 items:
-     *                                   type: object
-     *                                   properties:
-     *                                     questionId:
-     *                                       type: string
-     *                                       example: "1234567890abcdef12345678"
-     *                                     answer:
-     *                                       type: string
-     *                                       example: "A"
+     *                         competitor:
+     *                           type: object
+     *                           properties:
+     *                             userId:
+     *                               type: string
+     *                               example: "1234567890abcdef12345678"
+     *                             finished:
+     *                               type: boolean
+     *                               example: false
+     *                             answers:
+     *                               type: array
+     *                               items:
+     *                                 type: object
+     *                                 properties:
+     *                                   questionId:
+     *                                     type: string
+     *                                     example: "1234567890abcdef12345678"
+     *                                   answer:
+     *                                     type: string
+     *                                     example: "A"
      *                     questions:
      *                       type: array
      *                       items:
