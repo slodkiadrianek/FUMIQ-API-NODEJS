@@ -31,6 +31,12 @@ export class UserRoutes {
      *         schema:
      *           type: string
      *         description: ID of the user
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
      *         description: User
@@ -99,6 +105,12 @@ export class UserRoutes {
      *         schema:
      *           type: string
      *         description: ID of the user
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
      *         description: User
@@ -147,6 +159,12 @@ export class UserRoutes {
      *         schema:
      *           type: string
      *         description: ID of the session
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
      *         description: User
@@ -229,6 +247,12 @@ export class UserRoutes {
      *         schema:
      *           type: string
      *         description: ID of the session
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       204:
      *         description: No Content
@@ -246,6 +270,13 @@ export class UserRoutes {
      *   patch:
      *     summary: Change user password
      *     tags: [User]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     requestBody:
      *       required: true
      *       content:
@@ -288,6 +319,13 @@ export class UserRoutes {
      *   delete:
      *     summary: Delete user account
      *     tags: [User]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     requestBody:
      *       required: true
      *       content:
@@ -316,7 +354,7 @@ export class UserRoutes {
       this.auth.verify,
       ValidationMiddleware.validate(userId, "params"),
       ValidationMiddleware.validate(deleteUser),
-      this.userController.deleteUser,
+      this.userController.deleteUser
     );
     /**
      * @swagger
@@ -324,6 +362,13 @@ export class UserRoutes {
      *   put:
      *     summary: Update user account
      *     tags: [User]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     requestBody:
      *       required: true
      *       content:
@@ -378,6 +423,12 @@ export class UserRoutes {
      *         schema:
      *           type: string
      *         description: ID of the session
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
      *         description: User
