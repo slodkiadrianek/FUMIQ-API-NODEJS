@@ -25,6 +25,7 @@
   "dependencies": {
     "@vitest/runner": "^3.1.4",
     "bcryptjs": "^3.0.0",
+    "check-disk-space": "^3.4.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^4.21.2",
