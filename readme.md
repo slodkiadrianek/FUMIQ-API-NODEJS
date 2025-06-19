@@ -127,4 +127,4 @@ fumiq-backend/
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+https://github.com/slodkiadrianek/FUMIQ-API-NODEJS/tree/develop?tab=License-1-ov-file
