@@ -2,16 +2,19 @@ import { app } from "./app.js";
 import { Db } from "./config/database.config.js";
 import { caching } from "./app.js";
 import { RedisCacheService } from "./types/common.type.js";
-import { createServer } from "http";
 import { Server } from "socket.io";
 import { ITakenQuiz, TakenQuiz } from "./models/takenQuiz.model.js";
+import {createServer} from "http"
 const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    // origin: process.env.ORIGIN_LINK || "http://192.168.88.183:8080",
+   // origin: process.env.ORIGIN_LINK || "http://192.168.88.183:8080",
     credentials: true,
+    origin:"https://fumiq.fuki.edu.pl"
   },
+   transports: ['websocket', 'polling']
+
 });
 
 io.on("connection", (socket) => {
@@ -125,8 +128,8 @@ io.on("connection", (socket) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, async () => {
+const PORT = process.env.PORT || 3009;
+server.listen(PORT,'0.0.0.0', async () => {
   try {
     new Db(process.env.DB_LINK || "");
     await (caching as RedisCacheService).set("key", "value");
