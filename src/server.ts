@@ -129,7 +129,7 @@ io.on("connection", (socket) => {
 
 // Start the server
 const PORT = process.env.PORT || 3009;
-server.listen(PORT,'0.0.0.0', async () => {
+server.listen(PORT, async () => {
   try {
     new Db(process.env.DB_LINK || "");
     await (caching as RedisCacheService).set("key", "value");
