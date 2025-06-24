@@ -465,7 +465,6 @@ export class QuizService extends BaseService {
       }
       usersScore.push(competitorScore)
     }
-    console.log(usersScore)
     const averageScore = Math.floor(
       (usersScore.reduce((acc, curr) => acc + (curr / resQuiz.questions.length), 0) / resSession.competitors.length) * 100
     );

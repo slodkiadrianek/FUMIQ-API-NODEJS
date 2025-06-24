@@ -10,8 +10,7 @@ export class EmailService {
     private fromEmail: string,
   ) {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp-mail.outlook.com',
-      port: 587,
+      service: "gmail",
       auth: {
         user: this.user,
         pass: this.pass,

@@ -36,10 +36,7 @@ export class AuthController {
         userId: result._id,
       });
       res.status(201).json({
-        success: true,
-        data: {
-          user: result,
-        },
+        success: true
       });
       return;
     } catch (err) {

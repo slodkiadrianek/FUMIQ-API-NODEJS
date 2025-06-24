@@ -7,6 +7,7 @@ import {
   endQuizSession,
   quizId,
 } from "../../../schemas/quiz.schema.js";
+
 export class QuizRoutes {
   constructor(
     private quizController: QuizController,
@@ -23,6 +24,13 @@ export class QuizRoutes {
      *   post:
      *     summary: Create a new quiz
      *     tags: [Quiz]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     requestBody:
      *       required: true
      *       content:
@@ -131,88 +139,107 @@ export class QuizRoutes {
      *                             type: string
      *                           questionType:
      *                             type: string
+     *       400:
+     *         description: Bad request - Invalid input data
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       500:
+     *         description: Internal server error
      */
     this.router.post(
       "/api/v1/quizzes/",
-      ValidationMiddleware.validate(createQuiz, "body"),
       this.auth.verify,
+      ValidationMiddleware.validate(createQuiz, "body"),
       this.quizController.createQuiz
-      /**
-       * @swagger
-       * /api/v1/quizzes/:
-       *   get:
-       *     summary: Get all quizzes
-       *     tags: [Quiz]
-       *     responses:
-       *       200:
-       *         description: Quizzes retrieved successfully
-       *         content:
-       *           application/json:
-       *             schema:
-       *               type: object
-       *               properties:
-       *                 success:
-       *                   type: boolean
-       *                   example: true
-       *                 data:
-       *                   type: array
-       *                   items:
-       *                     type: object
-       *                     properties:
-       *                       _id:
-       *                         type: string
-       *                         example: 64f8e4b2c9d3f4a1b2c3d4e5
-       *                       title:
-       *                         type: string
-       *                         example: TEST
-       *                       description:
-       *                         type: string
-       *                         example: TEST
-       *                       timeLimit:
-       *                         type: number
-       *                         example: 12
-       *                       questions:
-       *                         type: array
-       *                         items:
-       *                           type: object
-       *                           required:
-       *                             - options
-       *                             - questionText
-       *                             - questionType
-       *                           properties:
-       *                             photoUrl:
-       *                               type: string
-       *                               format: uri
-       *                               nullable: true
-       *                               description: URL to a photo for the question (optional).
-       *                             correctAnswer:
-       *                               oneOf:
-       *                                 - type: string
-       *                                 - type: array
-       *                                   items:
-       *                                     type: string
-       *                                 - type: "null"
-       *                               description: The correct answer, can be a string, array of strings, or null.
-       *                             options:
-       *                               type: array
-       *                               items:
-       *                                 oneOf:
-       *                                   - type: string
-       *                                   - type: "null"
-       *                               description: Array of possible answer options.
-       *                             questionText:
-       *                               type: string
-       *                               description: The text of the question.
-       *                             questionType:
-       *                               type: string
-       *                               description: The type of the question.
-       */
     );
+
+    /**
+     * @swagger
+     * /api/v1/quizzes/:
+     *   get:
+     *     summary: Get all quizzes
+     *     tags: [Quiz]
+     *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
+     *     responses:
+     *       200:
+     *         description: Quizzes retrieved successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *                   example: true
+     *                 data:
+     *                   type: array
+     *                   items:
+     *                     type: object
+     *                     properties:
+     *                       _id:
+     *                         type: string
+     *                         example: 64f8e4b2c9d3f4a1b2c3d4e5
+     *                       title:
+     *                         type: string
+     *                         example: TEST
+     *                       description:
+     *                         type: string
+     *                         example: TEST
+     *                       timeLimit:
+     *                         type: number
+     *                         example: 12
+     *                       questions:
+     *                         type: array
+     *                         items:
+     *                           type: object
+     *                           required:
+     *                             - options
+     *                             - questionText
+     *                             - questionType
+     *                           properties:
+     *                             photoUrl:
+     *                               type: string
+     *                               format: uri
+     *                               nullable: true
+     *                               description: URL to a photo for the question (optional).
+     *                             correctAnswer:
+     *                               oneOf:
+     *                                 - type: string
+     *                                 - type: array
+     *                                   items:
+     *                                     type: string
+     *                                 - type: "null"
+     *                               description: The correct answer, can be a string, array of strings, or null.
+     *                             options:
+     *                               type: array
+     *                               items:
+     *                                 oneOf:
+     *                                   - type: string
+     *                                   - type: "null"
+     *                               description: Array of possible answer options.
+     *                             questionText:
+     *                               type: string
+     *                               description: The text of the question.
+     *                             questionType:
+     *                               type: string
+     *                               description: The type of the question.
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       500:
+     *         description: Internal server error
+     */
     this.router.get(
       "/api/v1/quizzes/",
       this.auth.verify,
       this.quizController.getAllQuizez
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}:
@@ -220,6 +247,12 @@ export class QuizRoutes {
      *     summary: Get a quiz by ID
      *     tags: [Quiz]
      *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *       - in: path
      *         name: quizId
      *         schema:
@@ -287,6 +320,12 @@ export class QuizRoutes {
      *                           questionType:
      *                             type: string
      *                             description: The type of the question.
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.get(
       "/api/v1/quizzes/:quizId",
@@ -294,6 +333,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(quizId, "params"),
       this.quizController.getQuizById
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}:
@@ -301,15 +341,85 @@ export class QuizRoutes {
      *     summary: Update a quiz by ID
      *     tags: [Quiz]
      *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *       - in: path
      *         name: quizId
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz to update
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - title
+     *               - description
+     *               - timeLimit
+     *               - questions
+     *             properties:
+     *               title:
+     *                 type: string
+     *                 example: Updated Quiz Title
+     *               description:
+     *                 type: string
+     *                 example: Updated Quiz Description
+     *               timeLimit:
+     *                 type: number
+     *                 example: 15
+     *               questions:
+     *                 type: array
+     *                 items:
+     *                   type: object
+     *                   required:
+     *                     - options
+     *                     - questionText
+     *                     - questionType
+     *                   properties:
+     *                     photoUrl:
+     *                       type: string
+     *                       format: uri
+     *                       nullable: true
+     *                       description: URL to a photo for the question (optional).
+     *                     correctAnswer:
+     *                       oneOf:
+     *                         - type: string
+     *                         - type: array
+     *                           items:
+     *                             type: string
+     *                         - type: "null"
+     *                       description: The correct answer, can be a string, array of strings, or null.
+     *                     options:
+     *                       type: array
+     *                       items:
+     *                         oneOf:
+     *                           - type: string
+     *                           - type: "null"
+     *                       description: Array of possible answer options.
+     *                     questionText:
+     *                       type: string
+     *                       description: The text of the question.
+     *                     questionType:
+     *                       type: string
+     *                       description: The type of the question.
      *     responses:
      *       204:
      *         description: Quiz updated successfully
+     *       400:
+     *         description: Bad request - Invalid input data
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.put(
       "/api/v1/quizzes/:quizId",
@@ -318,6 +428,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(quizId, "params"),
       this.quizController.updateQuiz
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}:
@@ -325,15 +436,27 @@ export class QuizRoutes {
      *     summary: Delete a quiz by ID
      *     tags: [Quiz]
      *     parameters:
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *       - in: path
      *         name: quizId
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz to delete
      *     responses:
      *       204:
      *         description: Quiz deleted successfully
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.delete(
       "/api/v1/quizzes/:quizId",
@@ -341,6 +464,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(quizId, "params"),
       this.quizController.deleteQuizById
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}/sessions:
@@ -353,10 +477,16 @@ export class QuizRoutes {
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz to start session for
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       201:
-     *         description: Quiz retrieved successfully
+     *         description: Quiz session started successfully
      *         content:
      *           application/json:
      *             schema:
@@ -429,7 +559,14 @@ export class QuizRoutes {
      *                                 type: boolean
      *                                 description: Indicates if the competitor has completed the quiz
      *                                 example: false
-     *
+     *       400:
+     *         description: Bad request - Invalid quiz ID
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.post(
       "/api/v1/quizzes/:quizId/sessions",
@@ -437,6 +574,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(quizId, "params"),
       this.quizController.startQuizSession
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}/sessions/{sessionId}:
@@ -449,17 +587,30 @@ export class QuizRoutes {
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz
      *       - in: path
      *         name: sessionId
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the session to retrieve
+     *         description: ID of the session to end
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       204:
-     *         description: Quiz ended successfully
-     *
+     *         description: Quiz session ended successfully
+     *       400:
+     *         description: Bad request - Invalid parameters
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz or session not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.patch(
       "/api/v1/quizzes/:quizId/sessions/:sessionId",
@@ -467,6 +618,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(endQuizSession, "params"),
       this.quizController.endQuizSession
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}/sessions/{sessionId}/results:
@@ -479,16 +631,22 @@ export class QuizRoutes {
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz
      *       - in: path
      *         name: sessionId
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the session to retrieve
+     *         description: ID of the session
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
-     *         description: Quiz retrieved successfully
+     *         description: Quiz results retrieved successfully
      *         content:
      *           application/json:
      *             schema:
@@ -525,6 +683,12 @@ export class QuizRoutes {
      *                                 type: string
      *                                 description: The competitor's answer to the question
      *                                 example: "4"
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz or session not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.get(
       "/api/v1/quizzes/:quizId/sessions/:sessionId/results",
@@ -532,6 +696,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(endQuizSession, "params"),
       this.quizController.getQuizResults
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}/sessions:
@@ -544,10 +709,22 @@ export class QuizRoutes {
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz
+     *       - in: path
+     *         name: sessionId
+     *         schema:
+     *           type: string
+     *         required: true
+     *         description: ID of the session to end
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
-     *         description: Quiz retrieved successfully
+     *         description: Quiz sessions retrieved successfully
      *         content:
      *           application/json:
      *             schema:
@@ -567,17 +744,24 @@ export class QuizRoutes {
      *                         properties:
      *                           startedAt:
      *                             type: string
+     *                             format: date-time
      *                             description: Started at date of the quiz session
      *                             example: "2023-05-05T14:30:00Z"
      *                           endedAt:
      *                             type: string
+     *                             format: date-time
      *                             description: Ended at date of the quiz session
      *                             example: "2023-05-05T14:30:00Z"
      *                           amountOfParticipants:
      *                             type: number
      *                             description: Amount of participants in the quiz
      *                             example: 23
-     *
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.get(
       "/api/v1/quizzes/:quizId/sessions",
@@ -585,6 +769,7 @@ export class QuizRoutes {
       ValidationMiddleware.validate(quizId, "params"),
       this.quizController.getAllSessions
     );
+
     /**
      * @swagger
      * /api/v1/quizzes/{quizId}/sessions/{sessionId}:
@@ -597,16 +782,22 @@ export class QuizRoutes {
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the quiz to retrieve
+     *         description: ID of the quiz
      *       - in: path
      *         name: sessionId
      *         schema:
      *           type: string
      *         required: true
-     *         description: ID of the session to retrieve
+     *         description: ID of the session
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
      *     responses:
      *       200:
-     *         description: Quiz retrieved successfully
+     *         description: Quiz session retrieved successfully
      *         content:
      *           application/json:
      *             schema:
@@ -654,7 +845,7 @@ export class QuizRoutes {
      *                               question:
      *                                 type: string
      *                                 description: question text
-     *                                 example: 124f34ffsd124783294ftvy7fsdf324
+     *                                 example: "What is 2+2?"
      *                               status:
      *                                 type: string
      *                                 example: "success"
@@ -664,9 +855,15 @@ export class QuizRoutes {
      *                                 example: "4"
      *                               timestamp:
      *                                 type: string
+     *                                 format: date-time
      *                                 description: Timestamp of the answer
      *                                 example: "2023-05-05T14:30:00Z"
-     *
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz or session not found
+     *       500:
+     *         description: Internal server error
      */
     this.router.get(
       "/api/v1/quizzes/:quizId/sessions/:sessionId",
@@ -674,6 +871,88 @@ export class QuizRoutes {
       ValidationMiddleware.validate(endQuizSession, "params"),
       this.quizController.getSession
     );
+
+    /**
+     * @swagger
+     * /api/v1/quizzes/{quizId}/sessions/{sessionId}/analytics:
+     *   get:
+     *     summary: Analyze quiz session questions
+     *     tags: [Session]
+     *     parameters:
+     *       - in: path
+     *         name: quizId
+     *         schema:
+     *           type: string
+     *         required: true
+     *         description: ID of the quiz
+     *       - in: path
+     *         name: sessionId
+     *         schema:
+     *           type: string
+     *         required: true
+     *         description: ID of the session
+     *       - in: header
+     *         name: Authorization
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Bearer token
+     *     responses:
+     *       200:
+     *         description: Quiz analytics retrieved successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *                   example: true
+     *                 data:
+     *                   type: object
+     *                   description: Analytics data for the quiz session
+     *                   properties:
+     *                     quizTitle:
+     *                       type: string
+     *                       example: TEST
+     *                     quizDescription:
+     *                       type: string
+     *                       example: Test Naukowy
+     *                     averageScore:
+     *                       type: number
+     *                       example: 87
+     *                     highestScore:
+     *                       type: number
+     *                       example: 100
+     *                     question:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                         properties:
+     *                           questionText:
+     *                             type: string
+     *                             example: 2+2
+     *                           options:
+     *                             type: array
+     *                             items:
+     *                               type: object
+     *                               properties:
+     *                                 optionText:
+     *                                   type: string
+     *                                   example: Paris
+     *                                 percentage:
+     *                                   type: number
+     *                                   example: 90
+     *                                 isCorrect:
+     *                                   type: boolean
+     *                                   example: false
+     *       401:
+     *         description: Unauthorized - Invalid or missing JWT token
+     *       404:
+     *         description: Quiz or session not found
+     *       500:
+     *         description: Internal server error
+     */
     this.router.get(
       "/api/v1/quizzes/:quizId/sessions/:sessionId/analytics",
       this.auth.verify,

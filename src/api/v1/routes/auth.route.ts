@@ -107,7 +107,6 @@ export class AuthRoutes {
      */
     this.router.post(
       "/api/v1/auth/register",
-      this.rateLimit,
       ValidationMiddleware.validate(registerUser, "body"),
       this.authController.registerUser
     );
@@ -151,7 +150,6 @@ export class AuthRoutes {
      */
     this.router.post(
       "/api/v1/auth/login",
-      this.rateLimit,
       ValidationMiddleware.validate(loginUser, "body"),
       this.authController.loginUser
     );

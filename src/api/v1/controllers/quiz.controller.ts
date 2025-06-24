@@ -271,13 +271,14 @@ export class QuizController {
       const quizId: string = req.params.quizId
       this.logger.info("Attempting to get analytics data about session", { sessionId, quizId })
       const result: {
+
         quizTitle: string;
         quizDescription: string;
-        question: {
-          questionText: string;
-          questionScore: number;
-        }[];
-      } = await this.quizService.AnalizeQuizQuestions(sessionId, quizId, (req as CustomRequest).user.id)
+        averageScore: number
+        highestScore: number
+        questions: { questionText: string, options: { optionText: string, percentage: number, isCorrect: boolean }[] }[]
+      }
+        = await this.quizService.AnalizeQuizQuestions(sessionId, quizId, (req as CustomRequest).user.id)
       res.status(200).json({
         success: true,
         data: {

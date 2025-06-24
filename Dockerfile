@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 3009
 
 # Set environment variables (optional, can also be done in docker-compose or runtime)
 ENV NODE_ENV=production

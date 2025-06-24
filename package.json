@@ -1,11 +1,11 @@
 {
   "name": "fumiq",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "system do przeprowadzania sprawdzianów w szkole",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node --env-file=.env ./dist/server.js",
+    "start": "dotenv -e .env -- node ./dist/server.js",
     "build": "tsc ",
     "dev": "npx  tsx  watch --env-file=.env  ./src/server.ts",
     "test": "vitest --isolate   run --pool=forks",
@@ -25,8 +25,10 @@
   "dependencies": {
     "@vitest/runner": "^3.1.4",
     "bcryptjs": "^3.0.0",
+    "check-disk-space": "^3.4.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv-cli": "^8.0.0",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
