@@ -26,7 +26,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           port: ${{ secrets.SERVER_PORT }}
           key: ${{ secrets.SSH_KEY }}
-          source: "dist/,package.json,.env"   # only necessary files
           target: "/home/${{ secrets.SERVER_USER }}/FUMIQ-API-NODEJS"
 
       - name: SSH into server and deploy
