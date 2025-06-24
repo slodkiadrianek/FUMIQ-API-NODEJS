@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node --env-file=.env ./dist/server.js",
+    "start": "dotenv -e .env -- node ./dist/server.js",
     "build": "tsc ",
     "dev": "npx  tsx  watch --env-file=.env  ./src/server.ts",
     "test": "vitest --isolate   run --pool=forks",
