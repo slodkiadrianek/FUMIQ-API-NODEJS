@@ -1,65 +1,57 @@
-name: CI/CD Pipeline
+name: Test SSH Key
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  test-ssh:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
+    - name: Test SSH Key Format
+      run: |
+        echo "=== SSH Key Debug Info ==="
+        echo "Key length: $(echo '${{ secrets.SSH_KEY }}' | wc -c) characters"
+        echo "Key lines: $(echo '${{ secrets.SSH_KEY }}' | wc -l) lines"
+        echo "First line: $(echo '${{ secrets.SSH_KEY }}' | head -1)"
+        echo "Last line: $(echo '${{ secrets.SSH_KEY }}' | tail -1)"
+        
+    - name: Setup SSH manually
+      run: |
+        # Create SSH directory
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        
+        # Write the SSH key
+        echo '${{ secrets.SSH_KEY }}' > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        
+        # Verify key format
+        echo "=== Key file verification ==="
+        head -1 ~/.ssh/id_ed25519
+        tail -1 ~/.ssh/id_ed25519
+        
+        # Test key validity
+        ssh-keygen -l -f ~/.ssh/id_ed25519 || echo "Key format issue detected"
+        
+    - name: Add server to known_hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null
+        
     - name: Test SSH connection
+      run: |
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -i ~/.ssh/id_ed25519 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH Success!'; whoami; pwd" || echo "SSH connection failed"
+        
+    - name: Test with SSH action
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_IP }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_KEY }}
         port: 22
+        debug: true
         script: |
-          echo "SSH connection successful!"
+          echo "SSH Action Success!"
           whoami
           pwd
-    
-    - name: SCP files to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: 22
-        source: "."
-        target: "/FUMIQ-API-NODEJS"
-        overwrite: true
-        
-    - name: Deploy application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: 22
-        script: |
-          cd /FUMIQ-API-NODEJS
-          
-          # Stop and remove existing container
-          docker stop fumiq-api-nodejs || true
-          docker rm fumiq-api-nodejs || true
-          
-          # Remove old image to free space
-          docker rmi fumiq-api-nodejs || true
-          
-          # Build new image
-          docker build -t fumiq-api-nodejs .
-          
-          # Run new container
-          docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
-          
-          # Clean up unused images
-          docker image prune -f
