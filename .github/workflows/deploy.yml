@@ -38,8 +38,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/${{ secrets.SERVER_USER }}/FUMIQ-API-NODEJS
-            docker stop fumiq-api-nodejs || true
-            docker rm fumiq-api-nodejs || true
-            docker build -t fumiq-api-nodejs .
-            docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
-
+            sudo docker stop fumiq-api-nodejs || true
+            sudo docker rm fumiq-api-nodejs || true
+            sudo docker build -t fumiq-api-nodejs .
+            sudo docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
