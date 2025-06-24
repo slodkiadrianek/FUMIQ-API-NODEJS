@@ -167,6 +167,7 @@ export class QuizService extends BaseService {
       questionId: el._id,
       question: el.questionText,
       answer: el.correctAnswer,
+      points: el.points,
     }));
     for (const el of quizSession.competitors) {
       const userAnswersInfo: {
@@ -176,6 +177,7 @@ export class QuizService extends BaseService {
       const name: string = `${el.userId.firstname} ${el.userId.lastname}`;
       const userAnswers = el.answers;
       let score: number = 0;
+      let pointsToScore: number = 0;
       for (const el of answers) {
         for (const userAnswer of userAnswers) {
           if (el.questionId.toString() === userAnswer.questionId.toString()) {
@@ -185,21 +187,22 @@ export class QuizService extends BaseService {
             });
             if (typeof el.answer === "string") {
               if (el.answer.toLowerCase() === userAnswer.answer.toLowerCase()) {
-                score++;
+                score += el.points;
               }
             } else {
               if (!el.answer) {
-                score++;
+                score += el.points
               } else {
                 if (el.answer.join(",").toLowerCase() === userAnswer.answer.toLowerCase()) {
-                  score++;
+                  score += el.points
                 }
               }
             }
           }
         }
+        pointsToScore += el.points
       }
-      score = Math.ceil((score / answers.length) * 100);
+      score = Math.ceil((score / pointsToScore) * 100);
       result.push({ name, score, userAnswers: userAnswersInfo });
     }
     await this.caching.set(
@@ -441,34 +444,38 @@ export class QuizService extends BaseService {
       }
       questions.push({ questionText: el.questionText, options: options })
     }
+    let poinsToScorePerUser: number = 0
     for (const competiror of resSession.competitors) {
 
       let competitorScore: number = 0
+      let pointsToScore: number = 0
       for (const question of resQuiz.questions) {
         for (const competirorAnswer of competiror.answers) {
           if (question._id.toString() === competirorAnswer.questionId.toString()) {
             if (typeof question.correctAnswer === "string") {
               if (question.correctAnswer.toLowerCase() === competirorAnswer.answer.toLowerCase()) {
-                competitorScore++;
+                competitorScore += question.points;
               }
             } else {
               if (!question.correctAnswer) {
-                competitorScore++;
+                competitorScore += question.points;
               } else {
                 if (question.correctAnswer.join(",").toLowerCase() === competirorAnswer.answer.toLowerCase()) {
-                  competitorScore++;
+                  competitorScore += question.points;
                 }
               }
             }
           }
         }
+        pointsToScore += question.points
+        poinsToScorePerUser = pointsToScore
       }
       usersScore.push(competitorScore)
     }
-    const averageScore = Math.floor(
-      (usersScore.reduce((acc, curr) => acc + (curr / resQuiz.questions.length), 0) / resSession.competitors.length) * 100
+    const averageScore = Math.ceil(
+      (usersScore.reduce((acc, curr) => acc + (curr / poinsToScorePerUser), 0) / resSession.competitors.length) * 100
     );
-    const highestScore = Math.floor((Math.max(...usersScore) / resQuiz.questions.length) * 100)
+    const highestScore = Math.ceil((Math.max(...usersScore) / poinsToScorePerUser) * 100)
     return { quizTitle: resQuiz.title, quizDescription: resQuiz.description, averageScore: averageScore, highestScore: highestScore, questions: questions }
   }
 }

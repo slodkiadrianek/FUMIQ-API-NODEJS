@@ -4,29 +4,26 @@ import { caching } from "./app.js";
 import { RedisCacheService } from "./types/common.type.js";
 import { Server } from "socket.io";
 import { ITakenQuiz, TakenQuiz } from "./models/takenQuiz.model.js";
-import {createServer} from "http"
+import { createServer } from "http"
 const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-   // origin: process.env.ORIGIN_LINK || "http://192.168.88.183:8080",
+    // origin: process.env.ORIGIN_LINK || "http://192.168.88.183:8080",
     credentials: true,
-    origin:"https://fumiq.fuki.edu.pl"
+    origin: "https://fumiq.fuki.edu.pl"
   },
-   transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling']
 
 });
 
 io.on("connection", (socket) => {
-  `New client connected: ${socket.id}`;
 
   socket.on("message", (data) => {
-    `Message received: ${data}`;
     io.emit("message", data);
   });
 
   socket.on("joinSession", (data) => {
-    data;
     if (data.sessionId && typeof data.sessionId === "string") {
       const sessionId = data.sessionId;
       io.emit(`newUser-${sessionId}`, data);
@@ -88,7 +85,6 @@ io.on("connection", (socket) => {
     }
   });
   socket.on("submitQuiz", (data) => {
-    `submitQuiz-${data.sessionId}`;
     io.emit(`submitQuiz-${data.sessionId}`, { userId: data.userId });
   });
 
@@ -115,7 +111,6 @@ io.on("connection", (socket) => {
         answer,
         timestamp: new Date(),
       });
-      `Sent`;
     } catch (error) {
       console.error("Error saving answer:", error);
       socket.emit("error", { message: "Failed to save answer" });
@@ -123,7 +118,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    `Client disconnected: ${socket.id}`;
   });
 });
 

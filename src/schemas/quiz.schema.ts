@@ -8,6 +8,7 @@ export const createQuiz: ObjectSchema = Joi.object({
     .items(
       Joi.object({
         photoUrl: Joi.optional(),
+        points: Joi.number().required(),
         correctAnswer: Joi.alternatives()
           .try(Joi.string(), Joi.array().items(Joi.string()), Joi.allow(null))
           .optional(),
