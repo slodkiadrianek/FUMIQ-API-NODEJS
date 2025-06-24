@@ -135,7 +135,7 @@ server.listen(PORT, async () => {
     await (caching as RedisCacheService).set("key", "value");
     const value = await (caching as RedisCacheService).get("key");
     if (value) {
-      console.log("Caching service is working");
+      console.log("Caching service is working properly");
     }
     console.log(`Server is running on port ${PORT}`);
   } catch (error) {
