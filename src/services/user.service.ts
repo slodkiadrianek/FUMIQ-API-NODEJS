@@ -206,6 +206,7 @@ export class UserService extends BaseService {
     const answers = quizSession.quizId.questions.map((el) => ({
       question: el._id,
       answer: el.correctAnswer,
+      points: el.points,
     }));
     for (const el of quizSession.competitors) {
       if (el.userId.toString() === userId) {
@@ -217,26 +218,28 @@ export class UserService extends BaseService {
       throw new AppError(400, "Session", `Session with this id not found`);
     }
     let score: number = 0;
+    let pointsToScore: number = 0;
     for (const el of answers) {
       for (const userAnswer of userAnswers) {
         if (el.question.toString() === userAnswer.questionId.toString()) {
           if (typeof el.answer === "string") {
             if (el.answer.toLowerCase() === userAnswer.answer.toLowerCase()) {
-              score++;
+              score += el.points;
             }
           } else {
             if (!el.answer) {
-              score++;
+              score += el.points;
             } else {
               if (el.answer.join(",").toLowerCase() === userAnswer.answer.toLowerCase()) {
-                score++;
+                score += el.points;
               }
             }
           }
         }
       }
+      pointsToScore += el.points
     }
-    score = Math.ceil((score / answers.length) * 100);
+    score = Math.ceil((score / pointsToScore) * 100);
     await this.caching.set(
       `Quiz-Result-${sessionId}-${userId}`,
       JSON.stringify(score),
