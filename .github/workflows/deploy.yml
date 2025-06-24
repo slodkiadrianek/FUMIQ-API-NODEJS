@@ -1,57 +1,44 @@
-name: Test SSH Key
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  test-ssh:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Test SSH Key Format
-      run: |
-        echo "=== SSH Key Debug Info ==="
-        echo "Key length: $(echo '${{ secrets.SSH_KEY }}' | wc -c) characters"
-        echo "Key lines: $(echo '${{ secrets.SSH_KEY }}' | wc -l) lines"
-        echo "First line: $(echo '${{ secrets.SSH_KEY }}' | head -1)"
-        echo "Last line: $(echo '${{ secrets.SSH_KEY }}' | tail -1)"
-        
-    - name: Setup SSH manually
-      run: |
-        # Create SSH directory
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        
-        # Write the SSH key
-        echo '${{ secrets.SSH_KEY }}' > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        
-        # Verify key format
-        echo "=== Key file verification ==="
-        head -1 ~/.ssh/id_ed25519
-        tail -1 ~/.ssh/id_ed25519
-        
-        # Test key validity
-        ssh-keygen -l -f ~/.ssh/id_ed25519 || echo "Key format issue detected"
-        
-    - name: Add server to known_hosts
-      run: |
-        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null
-        
-    - name: Test SSH connection
-      run: |
-        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -i ~/.ssh/id_ed25519 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH Success!'; whoami; pwd" || echo "SSH connection failed"
-        
-    - name: Test with SSH action
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: 22
-        debug: true
-        script: |
-          echo "SSH Action Success!"
-          whoami
-          pwd
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t fumiq-api-nodejs .
+
+      - name: Copy files to server via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          port: ${{ secrets.SERVER_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "."
+          target: "/FUMIQ-API-NODEJS"
+
+      - name: SSH into server and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          port: ${{ secrets.SERVER_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /FUMIQ-API-NODEJS
+            docker stop fumiq-api-nodejs || true
+            docker rm fumiq-api-nodejs || true
+            docker build -t fumiq-api-nodejs .
+            docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
