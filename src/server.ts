@@ -138,6 +138,7 @@ server.listen(PORT, async () => {
       console.log("Caching service is working");
     }
     console.log(`Server is running on port ${PORT}`);
+    console.log('App is ready to use');
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
