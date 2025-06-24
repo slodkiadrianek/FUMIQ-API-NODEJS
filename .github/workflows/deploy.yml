@@ -37,7 +37,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /FUMIQ-API-NODEJS
+            cd FUMIQ-API-NODEJS
             docker stop fumiq-api-nodejs || true
             docker rm fumiq-api-nodejs || true
             docker build -t fumiq-api-nodejs .
