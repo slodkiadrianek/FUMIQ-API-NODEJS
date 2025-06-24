@@ -41,4 +41,4 @@ jobs:
             docker stop fumiq-api-nodejs || true
             docker rm fumiq-api-nodejs || true
             docker build -t fumiq-api-nodejs .
-            docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
+            docker run --env-file .env -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
