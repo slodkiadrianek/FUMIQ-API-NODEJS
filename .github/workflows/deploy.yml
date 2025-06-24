@@ -7,35 +7,59 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        run: docker build -t fumiq-api-nodejs .
-
-      - name: SCP files to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "."
-          target: "/FUMIQ-API-NODEJS"
-
-      - name: SSH and deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd /FUMIQ-API-NODEJS
-            docker stop fumiq-api-nodejs || true
-            docker rm fumiq-api-nodejs || true
-            docker build -t fumiq-api-nodejs .
-            docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Test SSH connection
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        script: |
+          echo "SSH connection successful!"
+          whoami
+          pwd
+    
+    - name: SCP files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        source: "."
+        target: "/FUMIQ-API-NODEJS"
+        overwrite: true
+        
+    - name: Deploy application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        script: |
+          cd /FUMIQ-API-NODEJS
+          
+          # Stop and remove existing container
+          docker stop fumiq-api-nodejs || true
+          docker rm fumiq-api-nodejs || true
+          
+          # Remove old image to free space
+          docker rmi fumiq-api-nodejs || true
+          
+          # Build new image
+          docker build -t fumiq-api-nodejs .
+          
+          # Run new container
+          docker run -d -p 3009:3009 --name fumiq-api-nodejs fumiq-api-nodejs
+          
+          # Clean up unused images
+          docker image prune -f
