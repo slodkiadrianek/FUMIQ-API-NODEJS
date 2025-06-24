@@ -27,7 +27,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           key: ${{ secrets.SSH_KEY }}
           source: "."
-          target: "/FUMIQ-API-NODEJS"
+          target: "FUMIQ-API-NODEJS"
 
       - name: SSH into server and deploy
         uses: appleboy/ssh-action@master
