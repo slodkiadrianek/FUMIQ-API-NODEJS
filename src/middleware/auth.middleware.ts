@@ -14,7 +14,7 @@ export class Authentication {
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined in environment variables.");
     }
-    this.jwtSecret = process.env.JWT_SECRET;
+    this.jwtSecret = process.env.JWT_SECRET || "";
     this.logger = logger;
     this.caching = caching;
   }

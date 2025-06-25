@@ -24,7 +24,7 @@ export const errorHandler: ErrorRequestHandler = (
     error: {
       code: 500,
       category: "Internal Server Error",
-      description: err.message,
+      description: "Something went wrong on server side",
     },
   });
 };

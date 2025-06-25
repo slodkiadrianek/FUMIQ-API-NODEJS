@@ -9,9 +9,8 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    // origin: process.env.ORIGIN_LINK || "http://192.168.88.183:8080",
     credentials: true,
-    origin: "https://fumiq.fuki.edu.pl"
+    origin: process.env.ORIGIN_LINK || "http://localhost"
   },
   transports: ['websocket', 'polling']
 
@@ -130,6 +129,9 @@ server.listen(PORT, async () => {
     const value = await (caching as RedisCacheService).get("key");
     if (value) {
       console.log("Caching service is working properly");
+    }
+    if (!process.env.VALID_DOMAIN) {
+      process.exit(1)
     }
     console.log(`Server is running on port ${PORT}`);
   } catch (error) {
