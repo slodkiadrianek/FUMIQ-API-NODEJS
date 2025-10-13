@@ -73,7 +73,7 @@ export class AuthService extends BaseService {
       await this.emailService.sendEmail(
         userExist.email,
         "Aktywacja konta",
-        `https://${process.env.SERVER_IP}:3000/api/v1/auth/activate/${token}`
+        `${process.env.ORIGIN_LINK}/activateUser.html?token=${token}`
       );
       throw new AppError(
         401,

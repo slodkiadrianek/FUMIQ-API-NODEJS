@@ -428,13 +428,13 @@ export class UserRoutes {
      *       404:
      *         description: User not found
      */
-    this.router.delete(
-      "/api/v1/users/:userId",
-      this.auth.verify,
-      ValidationMiddleware.validate(userId, "params"),
-      ValidationMiddleware.validate(deleteUser),
-      this.userController.deleteUser
-    );
+    // this.router.delete(
+    //   "/api/v1/users/:userId",
+    //   this.auth.verify,
+    //   ValidationMiddleware.validate(userId, "params"),
+    //   ValidationMiddleware.validate(deleteUser),
+    //   this.userController.deleteUser
+    // );
 
     /**
      * @swagger

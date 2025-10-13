@@ -4,20 +4,20 @@ import { caching } from "./app.js";
 import { RedisCacheService } from "./types/common.type.js";
 import { Server } from "socket.io";
 import { ITakenQuiz, TakenQuiz } from "./models/takenQuiz.model.js";
-import { createServer } from "http"
+import { createServer, METHODS } from "http";
 const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
     credentials: true,
-    origin: process.env.ORIGIN_LINK || "http://localhost"
+    origin: process.env.ORIGIN_LINK || "http://localhost",
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   },
-  transports: ['websocket', 'polling']
-
+  transports: ["websocket", "polling"],
 });
 
 io.on("connection", (socket) => {
-
   socket.on("message", (data) => {
     io.emit("message", data);
   });
@@ -116,8 +116,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
-  });
+  socket.on("disconnect", () => {});
 });
 
 // Start the server
@@ -131,7 +130,7 @@ server.listen(PORT, async () => {
       console.log("Caching service is working properly");
     }
     if (!process.env.VALID_DOMAIN) {
-      process.exit(1)
+      process.exit(1);
     }
     console.log(`Server is running on port ${PORT}`);
   } catch (error) {

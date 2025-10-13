@@ -7,7 +7,7 @@ import { CustomRequest } from "../../../types/common.type.js";
 import { AppError } from "../../../models/error.model.js";
 
 export class QuizController {
-  constructor(private logger: Logger, private quizService: QuizService) { }
+  constructor(private logger: Logger, private quizService: QuizService) {}
 
   createQuiz = async (
     req: Request,
@@ -92,8 +92,6 @@ export class QuizController {
         throw new AppError(400, "User", "User id not found");
       }
       const quizId = req.params.quizId as string;
-      console.log(quizId);
-
       const data: Omit<IQuiz, "_id"> = {
         ...req.body,
         userId: (req as CustomRequest).user.id,
@@ -114,8 +112,10 @@ export class QuizController {
   ): Promise<void> => {
     try {
       const quizId = req.params.quizId as string;
+      const userId = (req as CustomRequest).user.id;
       this.logger.info(`Attempting to delete quiz with id ${quizId}`);
-      await this.quizService.deleteQuizById(quizId);
+
+      await this.quizService.deleteQuizById(quizId, userId);
       this.logger.info(`Quiz has been downloaded`);
       res.status(204).send();
       return;
@@ -157,8 +157,9 @@ export class QuizController {
   ): Promise<void> => {
     try {
       const sessionId = req.params.sessionId as string;
+      const userId = (req as CustomRequest).user.id;
       this.logger.info(`Attempting to end quiz`);
-      await this.quizService.endQuizSession(sessionId);
+      await this.quizService.endQuizSession(sessionId, userId);
       this.logger.info(`Quiz has been ended`);
       res.status(204).send();
       return;
@@ -174,6 +175,7 @@ export class QuizController {
     try {
       const quizId = req.params.quizId as string;
       const sessionId = req.params.sessionId as string;
+      const userId = (req as CustomRequest).user.id;
       this.logger.info(`Attempting to download quiz results`);
       const result: {
         name: string;
@@ -182,7 +184,7 @@ export class QuizController {
           questionText: string;
           answer: string;
         }[];
-      }[] = await this.quizService.showQuizResults(quizId, sessionId);
+      }[] = await this.quizService.showQuizResults(quizId, sessionId, userId);
       this.logger.info(`Quiz results have been dowloaded and calculated`);
       res.status(200).json({
         success: true,
@@ -202,12 +204,13 @@ export class QuizController {
   ): Promise<void> => {
     try {
       const quizId: string = req.params.quizId;
+      const userId: string = (req as CustomRequest).user.id;
       this.logger.info(`Attempting to get data about sessions`, { quizId });
       const result: {
         startedAt: string;
         endedAt: string;
         amountOfParticipants: number;
-      }[] = await this.quizService.getAllSessions(quizId);
+      }[] = await this.quizService.getAllSessions(quizId, userId);
       this.logger.info(`Successfully dowloaded data about sessions`, {
         quizId,
       });
@@ -230,6 +233,7 @@ export class QuizController {
     try {
       const sessionId: string = req.params.sessionId;
       const quizId: string = req.params.quizId;
+      const userId: string = (req as CustomRequest).user.id;
       this.logger.info("Attempting to get data about session", {
         sessionId,
         quizId,
@@ -247,7 +251,7 @@ export class QuizController {
           answer: string;
           timestamp: Date;
         }[];
-      }[] = await this.quizService.getSession(quizId, sessionId);
+      }[] = await this.quizService.getSession(quizId, sessionId,userId);
       this.logger.info("Successfully dowloaded data about session", {
         sessionId,
       });
@@ -262,32 +266,48 @@ export class QuizController {
       next(error);
     }
   };
-  AnalyzeQuestions = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  AnalyzeQuestions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       if (!(req as CustomRequest).user.id) {
         throw new AppError(400, "User", "User id not found");
       }
-      const sessionId: string = req.params.sessionId
-      const quizId: string = req.params.quizId
-      this.logger.info("Attempting to get analytics data about session", { sessionId, quizId })
+      const sessionId: string = req.params.sessionId;
+      const quizId: string = req.params.quizId;
+      this.logger.info("Attempting to get analytics data about session", {
+        sessionId,
+        quizId,
+      });
       const result: {
-
         quizTitle: string;
         quizDescription: string;
-        averageScore: number
-        highestScore: number
-        questions: { questionText: string, options: { optionText: string, percentage: number, isCorrect: boolean }[] }[]
-      }
-        = await this.quizService.AnalizeQuizQuestions(sessionId, quizId, (req as CustomRequest).user.id)
+        averageScore: number;
+        highestScore: number;
+        questions: {
+          questionText: string;
+          options: {
+            optionText: string;
+            percentage: number;
+            isCorrect: boolean;
+          }[];
+        }[];
+      } = await this.quizService.AnalizeQuizQuestions(
+        sessionId,
+        quizId,
+        (req as CustomRequest).user.id
+      );
       res.status(200).json({
         success: true,
         data: {
-          session: result
-        }
-      })
-      return
+          session: result,
+        },
+      });
+      return;
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 }

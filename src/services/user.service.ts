@@ -7,8 +7,15 @@ import { Types } from "mongoose";
 import { AppError } from "../models/error.model.js";
 import bcrypt from "bcryptjs";
 import { IQuiz } from "../models/quiz.model.js";
+import { Authentication } from "../middleware/auth.middleware.js";
+import { EmailService } from "./email.service.js";
 export class UserService extends BaseService {
-  constructor(logger: Logger, caching: RedisCacheService) {
+  constructor(
+    logger: Logger,
+    caching: RedisCacheService,
+    private emailService: EmailService,
+    private auth: Authentication
+  ) {
     super(logger, caching);
   }
   getUserById = async (userId: string): Promise<IUser> => {
@@ -175,8 +182,34 @@ export class UserService extends BaseService {
   updateUser = async (
     userId: string,
     data: Omit<IUser, "_id">
-  ): Promise<IUser> => {
-    return this.updateItem("User", userId, data, User);
+  ): Promise<string> => {
+    const user = await this.getUserById(userId);
+    if (!user) {
+      this.logger.error(`User with this id not found`, { userId });
+      throw new AppError(400, "User", `User with this id not found`);
+    }
+    if (data.email && data.email !== user.email) {
+      const emailTaken = await User.findOne({ email: data.email });
+      if (emailTaken) {
+        this.logger.error(`Email already taken`, { userId, email: data.email });
+        throw new AppError(400, "User", "Email already taken");
+      } else {
+        user.email = data.email;
+        user.isActivated = false;
+        user.firstname = data.firstname;
+        user.lastname = data.lastname;
+        this.updateItem("User", userId, user, User);
+        const token: string = this.auth.sign(user);
+        await this.emailService.sendEmail(
+          data.email,
+          "Aktywacja konta",
+          `${process.env.ORIGIN_LINK}/activateUser.html?token=${token}`
+        );
+        return "Email changed, you have to activate your account again. A new email has been sent.";
+      }
+    }
+    await this.updateItem("User", userId, data, User);
+    return "User updated successfully";
   };
   getResult = async (userId: string, sessionId: string): Promise<number> => {
     if (await this.caching.exists(`Quiz-Result-${sessionId}-${userId}`)) {
@@ -230,21 +263,24 @@ export class UserService extends BaseService {
             if (!el.answer) {
               score += el.points;
             } else {
-              if (el.answer.join(",").toLowerCase() === userAnswer.answer.toLowerCase()) {
+              if (
+                el.answer.join(",").toLowerCase() ===
+                userAnswer.answer.toLowerCase()
+              ) {
                 score += el.points;
               }
             }
           }
         }
       }
-      pointsToScore += el.points
+      pointsToScore += el.points;
     }
     score = Math.ceil((score / pointsToScore) * 100);
     await this.caching.set(
       `Quiz-Result-${sessionId}-${userId}`,
       JSON.stringify(score),
       {
-        EX: 30
+        EX: 30,
       }
     );
     return score;

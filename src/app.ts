@@ -21,14 +21,14 @@ import { swaggerUi, swaggerSpec } from "./swagger.js";
 import { AppError } from "./models/error.model.js";
 
 export const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
     // origin: process.env.ORIGIN_LINK || "http://192.168.0.194:8080",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
 
 app.use(express.json());
@@ -56,13 +56,13 @@ if (
 const emailService: EmailService = new EmailService(
   process.env.EMAIL_USER,
   process.env.EMAIL_PASS,
-  process.env.EMAIL_FROM,
+  process.env.EMAIL_FROM
 );
 export const logger: Logger = new Logger();
 const auth: Authentication = new Authentication(
   process.env.JWT_SECRET || "",
   logger,
-  caching as RedisCacheService,
+  caching as RedisCacheService
 );
 
 //AUTH
@@ -70,7 +70,7 @@ const authService: AuthService = new AuthService(
   logger,
   auth,
   caching as RedisCacheService,
-  emailService,
+  emailService
 );
 const authController: AuthController = new AuthController(logger, authService);
 const authRoutes: AuthRoutes = new AuthRoutes(authController, auth);
@@ -78,7 +78,7 @@ const authRoutes: AuthRoutes = new AuthRoutes(authController, auth);
 //QUIZ
 const quizService: QuizService = new QuizService(
   logger,
-  caching as RedisCacheService,
+  caching as RedisCacheService
 );
 const quizController: QuizController = new QuizController(logger, quizService);
 const quizRoutes: QuizRoutes = new QuizRoutes(quizController, auth);
@@ -87,11 +87,13 @@ const quizRoutes: QuizRoutes = new QuizRoutes(quizController, auth);
 const userService: UserService = new UserService(
   logger,
   caching as RedisCacheService,
+  emailService,
+  auth
 );
 const userController: UserController = new UserController(
   logger,
   userService,
-  auth,
+  auth
 );
 const userRoutes: UserRoutes = new UserRoutes(userController, auth);
 
@@ -101,9 +103,13 @@ app.get("/health", async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const dbConnected = mongoose.connection.readyState === 1;
     if (!dbConnected) {
-      throw new AppError(503, "Database", "Database is not connected to an app")
+      throw new AppError(
+        503,
+        "Database",
+        "Database is not connected to an app"
+      );
     }
-    const memoryUsage = process.memoryUsage()
+    const memoryUsage = process.memoryUsage();
     const memoryMB = {
       rss: (memoryUsage.rss / 1024 / 1024).toFixed(2),
       heapUsed: (memoryUsage.heapUsed / 1024 / 1024).toFixed(2),
@@ -114,12 +120,12 @@ app.get("/health", async (_req: Request, res: Response, next: NextFunction) => {
       data: {
         dbConnected: true,
         memoryMB,
-      }
-    })
+      },
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
 app.use(authRoutes.router);
 app.use(quizRoutes.router);

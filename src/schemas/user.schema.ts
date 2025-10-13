@@ -6,7 +6,9 @@ export const registerUser: ObjectSchema = Joi.object({
   password: Joi.string()
     .min(8)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/)
+    .pattern(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/
+    )
     .required()
     .messages({
       "string.pattern.base":
@@ -14,15 +16,21 @@ export const registerUser: ObjectSchema = Joi.object({
       "string.min": "Password must be at least 8 characters long.",
       "string.max": "Password must not exceed 30 characters.",
     }),
-  email: Joi.string().email().custom((val: string) => {
-    const splitted = val.split("@")
-    if (splitted[1] !== process.env.VALID_DOMAIN) {
-      throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`)
-    }
-    return val
-  }).required().messages({
-    'any.custom': 'Please use your school email address ending with @zs2.ostrzeszow.pl'
-  }),
+  email: Joi.string()
+    .email()
+    .custom((val: string) => {
+      const splitted = val.split("@");
+      console.log(splitted, splitted[1], process.env.VALID_DOMAIN);
+      if (splitted[1] !== process.env.VALID_DOMAIN) {
+        throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`);
+      }
+      return val;
+    })
+    .required()
+    .messages({
+      "any.custom":
+        "Please use your school email address ending with @zs2.ostrzeszow.pl",
+    }),
   confirmPassword: Joi.string()
     .valid(Joi.ref("password")) // Must match "password"
     .required()
@@ -34,36 +42,47 @@ export const userId: ObjectSchema = Joi.object({
 });
 
 export const loginUser: ObjectSchema = Joi.object({
-  email: Joi.string().email().custom((val: string) => {
-    const splitted = val.split("@")
-    if (splitted[1] !== process.env.VALID_DOMAIN) {
-      throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`)
-    }
-    return val
-  }).required().messages({
-    'any.custom': 'Please use your school email address ending with @zs2.ostrzeszow.pl'
-  }),
-  password: Joi.string()
-    .required(),
+  email: Joi.string()
+    .email()
+    .custom((val: string) => {
+      const splitted = val.split("@");
+      if (splitted[1] !== process.env.VALID_DOMAIN) {
+        throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`);
+      }
+      return val;
+    })
+    .required()
+    .messages({
+      "any.custom":
+        "Please use your school email address ending with @zs2.ostrzeszow.pl",
+    }),
+  password: Joi.string().required(),
 });
 
 export const emailUser: ObjectSchema = Joi.object({
-  email: Joi.string().email().custom((val: string) => {
-    const splitted = val.split("@")
-    if (splitted[1] !== process.env.VALID_DOMAIN) {
-      throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`)
-    }
-    return val
-  }).required().messages({
-    'any.custom': 'Please use your school email address ending with @zs2.ostrzeszow.pl'
-  }),
+  email: Joi.string()
+    .email()
+    .custom((val: string) => {
+      const splitted = val.split("@");
+      if (splitted[1] !== process.env.VALID_DOMAIN) {
+        throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`);
+      }
+      return val;
+    })
+    .required()
+    .messages({
+      "any.custom":
+        "Please use your school email address ending with @zs2.ostrzeszow.pl",
+    }),
 });
 
 export const passwordUser: ObjectSchema = Joi.object({
   password: Joi.string()
     .min(8)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/)
+    .pattern(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/
+    )
     .required()
     .messages({
       "string.pattern.base":
@@ -78,14 +97,13 @@ export const passwordUser: ObjectSchema = Joi.object({
 });
 
 export const changePasswordUser: ObjectSchema = Joi.object({
-  oldPassword: Joi.string()
-    .min(8)
-    .max(30)
-    .required(),
+  oldPassword: Joi.string().min(8).max(30).required(),
   newPassword: Joi.string()
     .min(8)
     .max(30)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/)
+    .pattern(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]+$/
+    )
     .required()
     .messages({
       "string.pattern.base":
@@ -101,24 +119,26 @@ export const changePasswordUser: ObjectSchema = Joi.object({
 });
 
 export const deleteUser: ObjectSchema = Joi.object({
-  password: Joi.string()
-    .min(8)
-    .max(30)
-    .required(),
+  password: Joi.string().min(8).max(30).required(),
 });
 
 export const updateUser: ObjectSchema = Joi.object({
   firstname: Joi.string().required(),
   lastname: Joi.string().required(),
-  email: Joi.string().email().custom((val: string) => {
-    const splitted = val.split("@")
-    if (splitted[1] !== process.env.VALID_DOMAIN) {
-      throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`)
-    }
-    return val
-  }).required().messages({
-    'any.custom': 'Please use your school email address ending with @zs2.ostrzeszow.pl'
-  }),
+  email: Joi.string()
+    .email()
+    .custom((val: string) => {
+      const splitted = val.split("@");
+      if (splitted[1] !== process.env.VALID_DOMAIN) {
+        throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`);
+      }
+      return val;
+    })
+    .required()
+    .messages({
+      "any.custom":
+        "Please use your school email address ending with @zs2.ostrzeszow.pl",
+    }),
 });
 
 export const token: ObjectSchema = Joi.object({

@@ -5,6 +5,8 @@ import { BaseService } from "./base.service.js";
 import { ITakenQuiz, TakenQuiz } from "../models/takenQuiz.model.js";
 import { IUser } from "../models/user.model.js";
 import { AppError } from "../models/error.model.js";
+import fs from "fs";
+import { userId } from "../schemas/user.schema.js";
 
 export class QuizService extends BaseService {
   constructor(logger: Logger, caching: RedisCacheService) {
@@ -42,13 +44,41 @@ export class QuizService extends BaseService {
     quizId: string,
     quizData: Omit<IQuiz, "_id">
   ): Promise<IQuiz> => {
-    console.log(quizId);
-
-    console.log(quizData);
-
+    const quiz: IQuiz | null = await this.getItemById("Quiz", quizId, Quiz);
+    if (!quiz) {
+      this.logger.error(`Quiz with this id not found`, { quizId });
+      throw new AppError(404, "Quiz", "Quiz not found");
+    }
+    if (quizData.userId != quiz.userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        quizId,
+        userId: quizData.userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
+    }
     return this.updateItem("Quiz", quizId, quizData, Quiz);
   };
-  deleteQuizById = async (quizId: string): Promise<string> => {
+  deleteQuizById = async (quizId: string, userId: string): Promise<string> => {
+    const quiz: IQuiz | null = await this.getItemById("Quiz", quizId, Quiz);
+    if (!quiz) {
+      this.logger.error(`Quiz with this id not found`, { quizId });
+      throw new AppError(404, "Quiz", "Quiz not found");
+    }
+    if (quiz.userId.toString() !== userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        quizId,
+        userId: userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
+    }
     return this.deleteItem("Quiz", quizId, Quiz);
   };
   startQuizSession = async (
@@ -57,11 +87,22 @@ export class QuizService extends BaseService {
   ): Promise<ITakenQuiz> => {
     const quiz: IQuiz | null = await Quiz.findOne({
       _id: quizId,
-      userId: userId
-    })
+      userId: userId,
+    });
     if (!quiz) {
-      this.logger.error("Quiz not found", { userId, quizId })
-      throw new AppError(400, "Quiz", "Quiz not found")
+      this.logger.error("Quiz not found", { userId, quizId });
+      throw new AppError(400, "Quiz", "Quiz not found");
+    }
+    if (quiz.userId.toString() !== userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        quizId,
+        userId: userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
     }
     const quizCheck: ITakenQuiz | null = await TakenQuiz.findOne({
       quizId,
@@ -90,7 +131,7 @@ export class QuizService extends BaseService {
     });
     return result;
   };
-  endQuizSession = async (sessionId: string): Promise<void> => {
+  endQuizSession = async (sessionId: string, userId: string): Promise<void> => {
     const quizSession: ITakenQuiz | null = await TakenQuiz.findOne({
       _id: sessionId,
     });
@@ -98,12 +139,25 @@ export class QuizService extends BaseService {
       this.logger.error(`Quiz with id ${sessionId} not found`);
       throw new Error(`Quiz with id ${sessionId} not found`);
     }
+    if (quizSession.userId.toString() !== userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        sessionId,
+        userId: userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
+      return;
+    }
     quizSession.isActive = false;
     await quizSession.save();
   };
   showQuizResults = async (
     quizId: string,
-    sessionId: string
+    sessionId: string,
+    userId: string
   ): Promise<
     {
       name: string;
@@ -117,16 +171,16 @@ export class QuizService extends BaseService {
     if (await this.caching.exists(`Quiz-Results-${sessionId}`)) {
       const result:
         | {
-          name: string;
-          score: number;
-          userAnswers: {
-            questionText: string;
-            answer: string;
-          }[];
-        }[]
+            name: string;
+            score: number;
+            userAnswers: {
+              questionText: string;
+              answer: string;
+            }[];
+          }[]
         | null = JSON.parse(
-          (await this.caching.get(`Quiz-Results-${sessionId}`)) || ""
-        );
+        (await this.caching.get(`Quiz-Results-${sessionId}`)) || ""
+      );
       if (!result) {
         this.logger.error(
           `An error occurred while retrieving Quiz-Results-${sessionId}  from the cache.`
@@ -163,6 +217,17 @@ export class QuizService extends BaseService {
       this.logger.error(`Quiz with id ${sessionId} not found`);
       throw new Error(`Quiz with id ${sessionId} not found`);
     }
+    if (quizSession.quizId.userId.toString() !== userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        sessionId,
+        userId: userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
+    }
     const answers = quizSession.quizId.questions.map((el) => ({
       questionId: el._id,
       question: el.questionText,
@@ -191,16 +256,19 @@ export class QuizService extends BaseService {
               }
             } else {
               if (!el.answer) {
-                score += el.points
+                score += el.points;
               } else {
-                if (el.answer.join(",").toLowerCase() === userAnswer.answer.toLowerCase()) {
-                  score += el.points
+                if (
+                  el.answer.join(",").toLowerCase() ===
+                  userAnswer.answer.toLowerCase()
+                ) {
+                  score += el.points;
                 }
               }
             }
           }
         }
-        pointsToScore += el.points
+        pointsToScore += el.points;
       }
       score = Math.ceil((score / pointsToScore) * 100);
       result.push({ name, score, userAnswers: userAnswersInfo });
@@ -215,7 +283,8 @@ export class QuizService extends BaseService {
     return result;
   };
   getAllSessions = async (
-    quizId: string
+    quizId: string,
+    userId: string
   ): Promise<
     {
       id: string;
@@ -227,22 +296,34 @@ export class QuizService extends BaseService {
   > => {
     const sessions:
       | {
-        _id: string;
-        quizId: string;
-        updatedAt: string;
-        createdAt: string;
-        competitors: [];
-      }[]
+          _id: string;
+          quizId: string;
+          userId: string;
+          updatedAt: string;
+          createdAt: string;
+          competitors: [];
+        }[]
       | null = await TakenQuiz.find(
-        {
-          quizId,
-          isActive: false,
-        },
-        "_id quizId createdAt updatedAt competitors"
-      );
+      {
+        quizId,
+        isActive: false,
+      },
+      "_id quizId createdAt updatedAt competitors"
+    );
     if (!sessions) {
       this.logger.error("No sessions with this quizId", { quizId });
       throw new AppError(400, "Session", "No session with this quizId");
+    }
+    if (sessions[0].userId.toString() !== userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        quizId,
+        userId: userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
     }
     const result: {
       id: string;
@@ -264,7 +345,8 @@ export class QuizService extends BaseService {
   };
   getSession = async (
     quizId: string,
-    sessionId: string
+    sessionId: string,
+    userId: string
   ): Promise<
     {
       userId: string;
@@ -302,6 +384,17 @@ export class QuizService extends BaseService {
           }[];
         }
       >();
+      if(session?.userId.toString() !== userId){
+        this.logger.error(`You are not permitted to do this operation`, {
+          sessionId,
+          userId: userId,
+        });
+        throw new AppError(
+          403,
+          "Quiz",
+          "You are not permitted to do this operation"
+        );
+      }
     if (!session) {
       this.logger.error("No session with this id", { sessionId });
       throw new AppError(400, "Session", "No session with this id");
@@ -357,46 +450,67 @@ export class QuizService extends BaseService {
     }
     return result;
   };
-  AnalizeQuizQuestions = async (sessionId: string, quizId: string, userId: string):
-    Promise<{
-      quizTitle: string;
-      quizDescription: string;
-      averageScore: number
-      highestScore: number
-      questions: { questionText: string, options: { optionText: string, percentage: number, isCorrect: boolean }[] }[]
-    }> => {
-    const resQuiz = await Quiz.findOne({ _id: quizId, userId: userId })
+  AnalizeQuizQuestions = async (
+    sessionId: string,
+    quizId: string,
+    userId: string
+  ): Promise<{
+    quizTitle: string;
+    quizDescription: string;
+    averageScore: number;
+    highestScore: number;
+    questions: {
+      questionText: string;
+      options: { optionText: string; percentage: number; isCorrect: boolean }[];
+    }[];
+  }> => {
+    const resQuiz = await Quiz.findOne({ _id: quizId, userId: userId });
     if (!resQuiz) {
-      this.logger.error("Quiz with this id does not exist", { quizId })
-      throw new AppError(400, "Database", "Quiz with this id does not exist")
+      this.logger.error("Quiz with this id does not exist", { quizId });
+      throw new AppError(400, "Database", "Quiz with this id does not exist");
     }
     const resSession = await TakenQuiz.findOne({
       _id: sessionId,
-      userId: userId
-    })
+      userId: userId,
+    });
     if (!resSession) {
-      this.logger.error("Session with this id does not exist", { quizId })
-      throw new AppError(400, "Database", "Session with this id does not exist")
+      this.logger.error("Session with this id does not exist", { quizId });
+      throw new AppError(
+        400,
+        "Database",
+        "Session with this id does not exist"
+      );
     }
-    const questions: { questionText: string, options: { optionText: string, percentage: number, isCorrect: boolean }[] }[] = []
-    const usersScore: Array<number> = []
+    const questions: {
+      questionText: string;
+      options: { optionText: string; percentage: number; isCorrect: boolean }[];
+    }[] = [];
+    const usersScore: Array<number> = [];
     for (const el of resQuiz.questions) {
-      const options: { optionText: string, percentage: number, isCorrect: boolean }[] = []
+      const options: {
+        optionText: string;
+        percentage: number;
+        isCorrect: boolean;
+      }[] = [];
       for (const option of el.options) {
-        options.push({ optionText: option.toLowerCase(), percentage: 0, isCorrect: false })
+        options.push({
+          optionText: option.toLowerCase(),
+          percentage: 0,
+          isCorrect: false,
+        });
       }
       if (Array.isArray(el.correctAnswer)) {
         for (const correctAnswer of el.correctAnswer) {
           for (const option of options) {
             if (option.optionText === correctAnswer.toLowerCase()) {
-              option.isCorrect = true
+              option.isCorrect = true;
             }
           }
         }
       } else {
         for (const option of options) {
           if (option.optionText === el.correctAnswer?.toLowerCase()) {
-            option.isCorrect = true
+            option.isCorrect = true;
           }
         }
       }
@@ -404,33 +518,46 @@ export class QuizService extends BaseService {
         for (const competitorAnswer of competitor.answers) {
           if (el._id.toString() === competitorAnswer.questionId.toString()) {
             if (typeof el.correctAnswer === "string") {
-              if (el.correctAnswer.toLowerCase() === competitorAnswer.answer.toLowerCase()) {
+              if (
+                el.correctAnswer.toLowerCase() ===
+                competitorAnswer.answer.toLowerCase()
+              ) {
                 for (const option of options) {
-                  if (option.optionText === competitorAnswer.answer.toLowerCase()) {
-                    option.percentage++
+                  if (
+                    option.optionText === competitorAnswer.answer.toLowerCase()
+                  ) {
+                    option.percentage++;
                   }
                 }
               } else {
                 for (const option of options) {
-                  if (option.optionText === competitorAnswer.answer.toLowerCase()) {
-                    option.percentage++
+                  if (
+                    option.optionText === competitorAnswer.answer.toLowerCase()
+                  ) {
+                    option.percentage++;
                   }
                 }
               }
             } else {
               if (el.correctAnswer) {
-                if (el.correctAnswer.join(",").toLowerCase() === competitorAnswer.answer.toLowerCase()) {
+                if (
+                  el.correctAnswer.join(",").toLowerCase() ===
+                  competitorAnswer.answer.toLowerCase()
+                ) {
                   for (const correctAnswer of el.correctAnswer) {
                     for (const option of options) {
                       if (option.optionText === correctAnswer.toLowerCase()) {
-                        option.percentage++
+                        option.percentage++;
                       }
                     }
                   }
                 } else {
                   for (const option of options) {
-                    if (option.optionText === competitorAnswer.answer.toLowerCase()) {
-                      option.percentage++
+                    if (
+                      option.optionText ===
+                      competitorAnswer.answer.toLowerCase()
+                    ) {
+                      option.percentage++;
                     }
                   }
                 }
@@ -440,42 +567,61 @@ export class QuizService extends BaseService {
         }
       }
       for (const option of options) {
-        option.percentage = Math.floor((option.percentage / resSession.competitors.length) * 100)
+        option.percentage = Math.floor(
+          (option.percentage / resSession.competitors.length) * 100
+        );
       }
-      questions.push({ questionText: el.questionText, options: options })
+      questions.push({ questionText: el.questionText, options: options });
     }
-    let poinsToScorePerUser: number = 0
+    let poinsToScorePerUser: number = 0;
     for (const competiror of resSession.competitors) {
-
-      let competitorScore: number = 0
-      let pointsToScore: number = 0
+      let competitorScore: number = 0;
+      let pointsToScore: number = 0;
       for (const question of resQuiz.questions) {
         for (const competirorAnswer of competiror.answers) {
-          if (question._id.toString() === competirorAnswer.questionId.toString()) {
+          if (
+            question._id.toString() === competirorAnswer.questionId.toString()
+          ) {
             if (typeof question.correctAnswer === "string") {
-              if (question.correctAnswer.toLowerCase() === competirorAnswer.answer.toLowerCase()) {
+              if (
+                question.correctAnswer.toLowerCase() ===
+                competirorAnswer.answer.toLowerCase()
+              ) {
                 competitorScore += question.points;
               }
             } else {
               if (!question.correctAnswer) {
                 competitorScore += question.points;
               } else {
-                if (question.correctAnswer.join(",").toLowerCase() === competirorAnswer.answer.toLowerCase()) {
+                if (
+                  question.correctAnswer.join(",").toLowerCase() ===
+                  competirorAnswer.answer.toLowerCase()
+                ) {
                   competitorScore += question.points;
                 }
               }
             }
           }
         }
-        pointsToScore += question.points
-        poinsToScorePerUser = pointsToScore
+        pointsToScore += question.points;
+        poinsToScorePerUser = pointsToScore;
       }
-      usersScore.push(competitorScore)
+      usersScore.push(competitorScore);
     }
     const averageScore = Math.ceil(
-      (usersScore.reduce((acc, curr) => acc + (curr / poinsToScorePerUser), 0) / resSession.competitors.length) * 100
+      (usersScore.reduce((acc, curr) => acc + curr / poinsToScorePerUser, 0) /
+        resSession.competitors.length) *
+        100
     );
-    const highestScore = Math.ceil((Math.max(...usersScore) / poinsToScorePerUser) * 100)
-    return { quizTitle: resQuiz.title, quizDescription: resQuiz.description, averageScore: averageScore, highestScore: highestScore, questions: questions }
-  }
+    const highestScore = Math.ceil(
+      (Math.max(...usersScore) / poinsToScorePerUser) * 100
+    );
+    return {
+      quizTitle: resQuiz.title,
+      quizDescription: resQuiz.description,
+      averageScore: averageScore,
+      highestScore: highestScore,
+      questions: questions,
+    };
+  };
 }
