@@ -251,7 +251,7 @@ export class QuizController {
           answer: string;
           timestamp: Date;
         }[];
-      }[] = await this.quizService.getSession(quizId, sessionId,userId);
+      }[] = await this.quizService.getSession(quizId, sessionId, userId);
       this.logger.info("Successfully dowloaded data about session", {
         sessionId,
       });
@@ -303,6 +303,34 @@ export class QuizController {
         success: true,
         data: {
           session: result,
+        },
+      });
+      return;
+    } catch (error) {
+      next(error);
+    }
+  };
+  getAllPhotosUrls = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      this.logger.info("Attempting to get all photos urls");
+      const port:string =req.get('X-Client-Port') ?? "";
+      if (port !== "3007") {
+        throw new AppError(
+          403,
+          "Quiz",
+          "You are not authorized to access this resource"
+        );
+      }
+      const result: string[] = await this.quizService.getAllPhotosUrls();
+      this.logger.info("Photos urls have been downloaded");
+      res.status(200).json({
+        success: true,
+        data: {
+          photos: result,
         },
       });
       return;

@@ -4,7 +4,6 @@ import { UserController } from "../controllers/user.controller.js";
 import { ValidationMiddleware } from "../../../middleware/validation.middleware.js";
 import {
   changePasswordUser,
-  deleteUser,
   updateUser,
   userId,
 } from "../../../schemas/user.schema.js";

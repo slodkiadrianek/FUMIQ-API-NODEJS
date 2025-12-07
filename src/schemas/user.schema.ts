@@ -20,7 +20,6 @@ export const registerUser: ObjectSchema = Joi.object({
     .email()
     .custom((val: string) => {
       const splitted = val.split("@");
-      console.log(splitted, splitted[1], process.env.VALID_DOMAIN);
       if (splitted[1] !== process.env.VALID_DOMAIN) {
         throw new Error(`You have to use ${process.env.VALID_DOMAIN} domain`);
       }

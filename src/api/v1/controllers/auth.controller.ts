@@ -3,6 +3,7 @@ import { Logger } from "../../../utils/logger.js";
 import { IUser } from "../../../models/user.model.js";
 import { AuthService } from "../../../services/auth.service.js";
 import { CustomRequest } from "../../../types/common.type.js";
+import { AppError } from "../../../models/error.model.js";
 
 export class AuthController {
   private logger: Logger;
@@ -36,7 +37,7 @@ export class AuthController {
         userId: result._id,
       });
       res.status(201).json({
-        success: true
+        success: true,
       });
       return;
     } catch (err) {

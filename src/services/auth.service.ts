@@ -25,32 +25,47 @@ export class AuthService extends BaseService {
     userData.password = await bcrypt.hash(userData.password, 11);
     if (userExist) {
       if (!userExist.isActivated) {
-        const result: IUser = await this.updateItem<IUser>("User", userExist._id.toString(), userData, User)
+        const result: IUser = await this.updateItem<IUser>(
+          "User",
+          userExist._id.toString(),
+          userData,
+          User
+        );
+
         const token: string = this.auth.sign(result);
         await this.emailService.sendEmail(
           userData.email,
           "Aktywacja konta",
           `${process.env.ORIGIN_LINK}/activateUser.html?token=${token}`
         );
-        return result
+
+        return result;
       } else {
         this.logger.error("User with this email already exists");
-        throw new Error('User with this email already exist');
+        throw new AppError(
+          404,
+          "Validation",
+          "User with this email already exist"
+        );
       }
     }
+
     const result: IUser = await this.insertToDatabaseAndCache(
       "User",
       userData,
       User
     );
     const token: string = this.auth.sign(result);
+
     await this.emailService.sendEmail(
       userData.email,
       "Aktywacja konta",
       `${process.env.ORIGIN_LINK}/activateUser.html?token=${token}`
     );
+
     return result;
   };
+
   loginUser = async (
     email: string,
     password: string
@@ -61,6 +76,7 @@ export class AuthService extends BaseService {
     if (!userExist) {
       throw new AppError(404, "User", "User with this email does not exist");
     }
+
     const passwordComparison = await bcrypt.compare(
       password,
       userExist.password
@@ -68,6 +84,7 @@ export class AuthService extends BaseService {
     if (!passwordComparison) {
       throw new AppError(401, "User", "User password is incorrect");
     }
+
     if (!userExist.isActivated) {
       const token: string = this.auth.sign(userExist);
       await this.emailService.sendEmail(
@@ -81,6 +98,7 @@ export class AuthService extends BaseService {
         "You have to activate your account. A new email has been sent."
       );
     }
+
     const token = this.auth.sign(userExist);
     return { user: userExist, token };
   };
@@ -90,12 +108,14 @@ export class AuthService extends BaseService {
     if (!user) {
       throw new AppError(400, "User", "No user found with that email address");
     }
+
     const token: string = this.auth.sign(user);
     await this.emailService.sendEmail(
       email,
       "Password change",
       `${process.env.ORIGIN_LINK}/newPassword.html?token=${token}`
     );
+
     return;
   };
   resetPassword = async (token: string, password: string): Promise<IUser> => {
@@ -103,9 +123,11 @@ export class AuthService extends BaseService {
     const user: IUser | null = await User.findOne({
       email: (decoded as { user: { email: string } }).user.email,
     });
+
     if (!user) {
       throw new AppError(400, "User", "Invalid token or user not found");
     }
+
     user.password = await bcrypt.hash(password, 12);
     await user.save();
     return user;
@@ -115,9 +137,11 @@ export class AuthService extends BaseService {
     const user: IUser | null = await User.findOne({
       email: (decoded as { user: { email: string } }).user.email,
     });
+
     if (!user) {
       throw new AppError(400, "User", "Invalid token or user not found");
     }
+    
     user.isActivated = true;
     await user.save();
     return user;

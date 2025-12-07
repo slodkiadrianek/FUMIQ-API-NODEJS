@@ -5,8 +5,6 @@ import { BaseService } from "./base.service.js";
 import { ITakenQuiz, TakenQuiz } from "../models/takenQuiz.model.js";
 import { IUser } from "../models/user.model.js";
 import { AppError } from "../models/error.model.js";
-import fs from "fs";
-import { userId } from "../schemas/user.schema.js";
 
 export class QuizService extends BaseService {
   constructor(logger: Logger, caching: RedisCacheService) {
@@ -308,7 +306,7 @@ export class QuizService extends BaseService {
         quizId,
         isActive: false,
       },
-      "_id quizId createdAt updatedAt competitors"
+      "_id userId quizId createdAt updatedAt competitors"
     );
     if (!sessions) {
       this.logger.error("No sessions with this quizId", { quizId });
@@ -384,17 +382,17 @@ export class QuizService extends BaseService {
           }[];
         }
       >();
-      if(session?.userId.toString() !== userId){
-        this.logger.error(`You are not permitted to do this operation`, {
-          sessionId,
-          userId: userId,
-        });
-        throw new AppError(
-          403,
-          "Quiz",
-          "You are not permitted to do this operation"
-        );
-      }
+    if (session?.userId.toString() !== userId) {
+      this.logger.error(`You are not permitted to do this operation`, {
+        sessionId,
+        userId: userId,
+      });
+      throw new AppError(
+        403,
+        "Quiz",
+        "You are not permitted to do this operation"
+      );
+    }
     if (!session) {
       this.logger.error("No session with this id", { sessionId });
       throw new AppError(400, "Session", "No session with this id");
@@ -623,5 +621,19 @@ export class QuizService extends BaseService {
       highestScore: highestScore,
       questions: questions,
     };
+  };
+  getAllPhotosUrls = async (): Promise<string[]> => {
+    const photosFromQuizzes: IQuiz[] = await Quiz.find({}, "questions");
+    const photosUrls: string[] = [];
+    for (const quiz of photosFromQuizzes) {
+      for (const question of quiz.questions) {
+        if (question.photoUrl) {
+          const clearedNames: string[] = question.photoUrl.split("/");
+          const fileName = clearedNames[clearedNames.length - 1];
+          photosUrls.push(fileName);
+        }
+      }
+    }
+    return photosUrls;
   };
 }

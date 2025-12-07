@@ -18,6 +18,10 @@ export class QuizRoutes {
   }
 
   protected initializeRoutes(): void {
+     this.router.get(
+      "/api/v1/quizzes/photos",
+      this.quizController.getAllPhotosUrls
+    );
     /**
      * @swagger
      * /api/v1/quizzes/:
@@ -959,5 +963,6 @@ export class QuizRoutes {
       ValidationMiddleware.validate(endQuizSession, "params"),
       this.quizController.AnalyzeQuestions
     );
+   
   }
 }

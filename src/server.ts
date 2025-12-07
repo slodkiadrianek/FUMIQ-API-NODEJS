@@ -5,12 +5,13 @@ import { RedisCacheService } from "./types/common.type.js";
 import { Server } from "socket.io";
 import { ITakenQuiz, TakenQuiz } from "./models/takenQuiz.model.js";
 import { createServer, METHODS } from "http";
+import { AppError } from "./models/error.model.js";
 const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
     credentials: true,
-    origin: process.env.ORIGIN_LINK || "http://localhost",
+    origin: "http://127.0.0.1:5500",
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   },
@@ -34,7 +35,7 @@ io.on("connection", (socket) => {
         _id: data.sessionId,
       });
       if (!sessionQuiz) {
-        throw new Error("Session not found");
+        throw new AppError(404, "Validation", "Session not found");
       }
       for (const el of sessionQuiz.competitors) {
         if (el.userId.toString() === data.userId) {
